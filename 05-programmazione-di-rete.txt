@@ -1,0 +1,385 @@
+  _                _                              _                    _                _____ 
+ | |              | |                            | |                  (_)              | ____|
+ | |        __ _  | |__     ___    _ __    __ _  | |_    ___    _ __   _    ___        | |__  
+ | |       / _` | | '_ \   / _ \  | '__|  / _` | | __|  / _ \  | '__| | |  / _ \       |___ \ 
+ | |____  | (_| | | |_) | | (_) | | |    | (_| | | |_  | (_) | | |    | | | (_) |       ___) |
+ |______|  \__,_| |_.__/   \___/  |_|     \__,_|  \__|  \___/  |_|    |_|  \___/       |____/ 
+                                                                                              
+
+
+
+
+	-------------------------------------------------------------------------------------------------------------------------------------------------
+	 Obiettivo: comprendere la  programmazione dei Socket e la programmazione client-server attraverso lo sviluppo di semplici programmi in Python.
+	-------------------------------------------------------------------------------------------------------------------------------------------------
+
+> cd RETI2425/DockerNetProg/
+> wget http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/NetProg/compose.yml
+
+--2024-10-22 10:39:05--  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/NetProg/compose.yml
+Risoluzione di didattica-linux.unipr.it (didattica-linux.unipr.it)... 160.78.50.165
+Connessione a didattica-linux.unipr.it (didattica-linux.unipr.it)|160.78.50.165|:80... connesso.
+Richiesta HTTP inviata, in attesa di risposta... 200 OK
+Lunghezza: 500
+Salvataggio in: «compose.yml»
+
+compose.yml          100%[===========================>]     500  --.-KB/s    in 0s      
+
+2024-10-22 10:39:05 (21,3 MB/s) - «compose.yml» salvato [500/500]
+
+
+# Il compose file genera 2 container, ns2 e ns3, con la condivisione del volume.
+# Ho aggiustato (personalizzato) il file compose.yml come segue:
+
+services:
+  ns3:
+    container_name: ns3
+    hostname: ns3
+    image: cyberteam1/nginx-ssh
+    network_mode: bridge
+    ports:
+      - "9006:9006"
+    volumes:
+      -  ../Scrivania/Unipr/RetiDeiCalcolatori/RETI2425/DockerNetProg/:/var/www/html
+
+
+  ns2:
+    container_name: ns2
+    hostname: ns2
+    image: cyberteam1/nginx-ssh
+    network_mode: bridge
+    volumes:
+      -  ../Scrivania/Unipr/RetiDeiCalcolatori/RETI2425/DockerNetProg/:/var/www/html
+
+
+> docker-compose up -d
+Creating ns2 ... done
+Creating ns3 ... done
+
+
+> docker-compose ps
+Name              Command               State                            Ports                          
+--------------------------------------------------------------------------------------------------------
+ns2    /docker-entrypoint.sh ngin ...   Up      22/tcp, 80/tcp                                          
+ns3    /docker-entrypoint.sh ngin ...   Up      22/tcp, 80/tcp, 0.0.0.0:9006->9006/tcp,:::9006->9006/tcp
+
+
+> wget  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/NetProg/NetProg.tgz
+--2024-10-22 10:41:31--  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/NetProg/NetProg.tgz
+Risoluzione di didattica-linux.unipr.it (didattica-linux.unipr.it)... 160.78.50.165
+Connessione a didattica-linux.unipr.it (didattica-linux.unipr.it)|160.78.50.165|:80... connesso.
+Richiesta HTTP inviata, in attesa di risposta... 200 OK
+Lunghezza: 5180 (5,1K) [application/x-gzip]
+Salvataggio in: «NetProg.tgz»
+
+NetProg.tgz            100%[===========================>]   5,06K  --.-KB/s    in 0s      
+
+2024-10-22 10:41:31 (208 MB/s) - «NetProg.tgz» salvato [5180/5180]
+
+
+# Scompattare il tar:
+> tar xzvf NetProg.tgz 
+NetProg/
+NetProg/tcp/
+NetProg/tcp/http/
+NetProg/tcp/http/http-server.py
+NetProg/tcp/http/http-client-v2.py
+NetProg/tcp/http/http-client.py
+NetProg/tcp/echo/
+NetProg/tcp/echo/echotcp-client.py
+NetProg/tcp/echo/echotcp-server-thread.py
+NetProg/tcp/echo/echotcp2-client.py
+NetProg/tcp/echo/echotcp2-server-thread.py
+NetProg/udp/
+NetProg/udp/dgram_server6.py
+NetProg/udp/echo_client_prob.py
+NetProg/udp/dgram_client6.py
+NetProg/udp/echo_client.py
+NetProg/udp/dgram_client.py
+NetProg/udp/dgram_server.py
+NetProg/udp/echo_server.py
+NetProg/socket/
+NetProg/socket/addrinfo.c
+NetProg/socket/addrinfo.py
+NetProg/socket/gethostbyname.py
+NetProg/socket/inaddr.c
+NetProg/socket/gethostbyname.c
+NetProg/socket/gethostbyaddr.c
+NetProg/socket/gethostbyaddr.py
+
+
+# Aprire un terminale su ns2 e contemporaneamente un secondo terminale su ns3
+
+> docker exec -it ns2 bash   
+root@ns2:/# 
+
+> docker exec -it ns3 bash 
+root@ns3:/#
+
+
+
+	--------------------------------------
+		 gethostbyname()
+	--------------------------------------
+
+# Inserite una associazione nome-IP nel file /etc/hosts di ns2		(esempio: 172.17.0.3 ns3)
+
+root@ns2:/etc# nano hosts
+127.0.0.1       localhost
+::1     localhost ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+172.17.0.2      ns2
+172.17.0.3      ns3
+
+
+# Quindi verificate che  gethostbyname() prima consulta il file locale /etc/hosts poi se necessario esegue una query DNS,  in base alla configurazione standard della voce "hosts"  in /etc/nsswitch.conf ( hosts: files dns )
+
+
+root@ns2:/etc# cat nsswitch.conf
+# /etc/nsswitch.conf
+#
+# Example configuration of GNU Name Service Switch functionality.
+# If you have the `glibc-doc-reference' and `info' packages installed, try:
+# `info libc "Name Service Switch"' for information about this file.
+
+passwd:         files systemd
+group:          files systemd
+shadow:         files systemd
+gshadow:        files systemd
+
+hosts:          files dns
+networks:       files
+
+protocols:      db files
+services:       db files
+ethers:         db files
+rpc:            db files
+
+netgroup:       nis
+
+
+# Andando nella giusta sequenza di cartelle
+
+> more gethostbyname.py
+
+import socket
+import sys
+
+if len(sys.argv) < 2:
+    name = "www.python.org"
+else:
+   [name] = sys.argv[1:]
+
+try:
+    host = socket.gethostbyname(name)
+    print (host)
+except socket.gaierror as err:
+    print ("cannot resolve hostname: ", name, err)
+
+
+root@ns2: python3 gethostbyname.py www.unipr.it
+108.139.229.117
+
+root@ns2: python3 gethostbyname.py ns3
+172.17.0.3
+
+
+
+	--------------------------------------
+		Programmazione UDP	
+	--------------------------------------
+	
+# Sistemare ed eseguire i seguenti  programmi per la programmazione UDP in python 
+# - DGRAM: il client invia un datagramma al server 
+# - ECHO:   il client invia un datagramma al server; il server rimanda il datagramma al client
+
+root@ns3: python3 dgram_server.py
+port: 9006   server: 0.0.0.0 bufsize: 1024
+
+root@ns2: python3 dgram_client.py -s 172.17.0.3
+OPTIONS server: 172.17.0.3 - port: 9006 - bufsize: 100
+sent 5 Bytes
+
+# In ns3 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns3: python3 dgram_server.py
+port: 9006   server: 0.0.0.0 bufsize: 1024
+# questa e' la parte nuova:
+addr: ('172.17.0.2', 56476) data: hello
+
+
+root@ns2: python3 dgram_client.py -s ns3
+OPTIONS server: ns3 - port: 9006 - bufsize: 100
+sent 5 Bytes
+
+# In ns3 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns3: python3 dgram_server.py
+port: 9006   server: 0.0.0.0 bufsize: 1024
+addr: ('172.17.0.2', 56476) data: hello
+# questa e' la parte nuova:
+addr: ('172.17.0.2', 51377) data: hello
+
+	- - - - - - - - - -
+
+root@ns3: python3 echo_server.py
+port: 9006   server: 0.0.0.0 bufsize: 1024
+
+root@ns2: python3 echo_client.py -s ns3
+OPTIONS server: ns3 - port: 9006 - message: hello from Nicholas Arcari, in python
+to:  ('ns3', 9006)   - data: hello from Nicholas Arcari, in python
+from:  ('172.17.0.3', 9006)   - data: hello from Nicholas Arcari, in python
+
+# In ns3 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns3: python3 dgram_server.py
+port: 9006   server: 0.0.0.0 bufsize: 1024
+# questa e' la parte nuova:
+from: ('172.17.0.2', 47841)   data: hello from Nicholas Arcari, in python
+to: ('172.17.0.2', 47841)   data: hello from Nicholas Arcari, in python
+----------------------------
+^CChiudi socket ed esci..
+
+
+	--------------------------------------
+		Programmazione TCP
+	--------------------------------------
+	
+# Sistemare ed eseguire i seguenti  programmi per la programmazione TCP in Python 
+# - echotcp:  il client invia un messaggio al server, il server manda l'echo e chiude la connessione
+# - echotcp2: la connessione rimane aperta per diversi messaggi; per chiudere inviare il messaggio quit 
+
+root@ns3: python3 echotcp-server-thread.py
+OPTIONS server: 0.0.0.0 - port: 9006
+starting up on port ('0.0.0.0', 9006)
+in atttesa di una connessione
+
+root@ns2: python3 echotcp-client.py -s ns3
+OPTIONS server: ns3 - port: 9006 - message: hello from Arcari, in python
+Connesso al server ('ns3', 9006)
+Invio messaggio  hello from Arcari, in python
+
+# In ns3 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns3: python3 echotcp-server-thread.py
+OPTIONS server: 0.0.0.0 - port: 9006
+starting up on port ('0.0.0.0', 9006)
+in atttesa di una connessione
+# questa e' la parte nuova:
+connessione dal client  ('172.17.0.2', 38722)
+ricevuto hello from Arcari, in python
+inviato hello from Arcari, in python
+
+	- - - - - - - - - -
+
+root@ns3: python3 echotcp2-server-thread.py
+OPTIONS server: 0.0.0.0 - port: 9006
+server bind sulla porta ('0.0.0.0', 9006)
+in attesa di una connessione
+
+root@ns2: python3 echotcp2-client.py -s ns3
+OPTIONS server: ns3 - port: 9006  - message: hello from Arcari, in python
+Connesso al server ('ns3', 9006)
+message (q to quit) > ciao
+Risposta del server:  ciao
+
+# In ns3 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns3: python3 echotcp2-server-thread.py
+OPTIONS server: 0.0.0.0 - port: 9006
+server bind sulla porta ('0.0.0.0', 9006)
+in attesa di una connessione
+# questa e' la parte nuova:
+connessione dal client   ('172.17.0.2', 53789)
+messaggio ricevuto  ciao
+messaggio inviato   ciao
+
+# In ns2 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns2: python3 echotcp2-client.py -s ns3
+OPTIONS server: ns3 - port: 9006  - message: hello from Arcari, in python
+Connesso al server ('ns3', 9006)
+message (q to quit) > ciao
+Risposta del server:  ciao
+# questa e' la parte nuova:
+message (q to quit) > come
+Risposta del server:  come
+
+# In ns3 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns3: python3 echotcp2-server-thread.py
+OPTIONS server: 0.0.0.0 - port: 9006
+server bind sulla porta ('0.0.0.0', 9006)
+in attesa di una connessione
+connessione dal client   ('172.17.0.2', 53789)
+messaggio ricevuto  ciao
+messaggio inviato   ciao
+# questa e' la parte nuova:
+messaggio ricevuto  come
+messaggio inviato   come
+
+# In ns2 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns2: python3 echotcp2-client.py -s ns3
+OPTIONS server: ns3 - port: 9006  - message: hello from Arcari, in python
+Connesso al server ('ns3', 9006)
+message (q to quit) > ciao
+Risposta del server:  ciao
+message (q to quit) > come
+Risposta del server:  come
+# questa e' la parte nuova:
+message (q to quit) > stai
+Risposta del server:  stai
+
+# In ns3 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns3: python3 echotcp2-server-thread.py
+OPTIONS server: 0.0.0.0 - port: 9006
+server bind sulla porta ('0.0.0.0', 9006)
+in attesa di una connessione
+connessione dal client   ('172.17.0.2', 53789)
+messaggio ricevuto  ciao
+messaggio inviato   ciao
+messaggio ricevuto  come
+messaggio inviato   come
+# questa e' la parte nuova:
+messaggio ricevuto  stai
+messaggio inviato   stai
+
+# In ns2 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns2: python3 echotcp2-client.py -s ns3
+OPTIONS server: ns3 - port: 9006  - message: hello from Arcari, in python
+Connesso al server ('ns3', 9006)
+message (q to quit) > ciao
+Risposta del server:  ciao
+message (q to quit) > come
+Risposta del server:  come
+message (q to quit) > stai
+Risposta del server:  stai
+# questa e' la parte nuova:
+message (q to quit) > q
+
+# In ns3 viene visualizzato quanto segue a schermo:
+# questa e' la parte gia' visualizzata:
+root@ns3: python3 echotcp2-server-thread.py
+OPTIONS server: 0.0.0.0 - port: 9006
+server bind sulla porta ('0.0.0.0', 9006)
+in attesa di una connessione
+connessione dal client   ('172.17.0.2', 53789)
+messaggio ricevuto  ciao
+messaggio inviato   ciao
+messaggio ricevuto  come
+messaggio inviato   come
+messaggio ricevuto  stai
+messaggio inviato   stai
+# questa e' la parte nuova:
+messaggio ricevuto
+chiusa connessione da  ('172.17.0.2', 53789)
+
+
+
+

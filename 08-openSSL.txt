@@ -1,0 +1,186 @@
+  _                _                              _                    _              ___  
+ | |              | |                            | |                  (_)            / _ \ 
+ | |        __ _  | |__     ___    _ __    __ _  | |_    ___    _ __   _    ___     | (_) |
+ | |       / _` | | '_ \   / _ \  | '__|  / _` | | __|  / _ \  | '__| | |  / _ \     > _ < 
+ | |____  | (_| | | |_) | | (_) | | |    | (_| | | |_  | (_) | | |    | | | (_) |   | (_) |
+ |______|  \__,_| |_.__/   \___/  |_|     \__,_|  \__|  \___/  |_|    |_|  \___/     \___/ 
+
+                                                               
+                                                                                           
+
+	---------------------------------------------------------------------------------------
+		utilizzo di OpenSSL per familiarizzare con gli strumenti crittografici
+	---------------------------------------------------------------------------------------
+
+# Attivita'  svolta su didattica-linux.
+# Iniziamo con il creare su didattica-linux la directory html/RETI2425/ e al suo interno un file personale (toencrypt.txt) che verra'  utilizzato come dato su cui applicare le diverse tecniche crittografiche:
+
+> ssh nicholas.arcari@studenti.unipr.it@didattica-linux.unipr.it
+(nicholas.arcari@studenti.unipr.it@didattica-linux.unipr.it) Password:
+Welcome to Ubuntu 18.04.3 LTS (GNU/Linux 4.15.0-213-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+
+ * Canonical Livepatch is available for installation.
+   - Reduce system reboots and improve kernel security. Activate at:
+     https://ubuntu.com/livepatch
+New release '20.04.6 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+Last login: Sun Dec  1 16:59:41 2024 from 160.78.143.15
+
+
+> cd html/RETI2425
+
+> mkdir  8-OpenSSL
+
+> du -hs *  > 8-OpenSSL/toencrypt.txt
+
+> cd 8-OpenSSL
+
+> ls
+toencrypt.txt
+
+> cat toencrypt.txt
+20K     1-Docker.txt
+8,0K    2-NetSniffing.pcap
+16K     2-NetSniffing.txt
+8,0K    3-IPstatico.txt
+12K     4-DockerRouting.txt
+16K     5-NetProg.txt
+12K     6-http.txt
+16K     7-firewall.txt
+4,0K    8-OpenSSL
+12K     opz-IPv6.txt
+12K     opz-wifi.txt
+
+
+# Creare i file:
+
+
+# - toencrypt.b64
+> openssl base64 -e -in toencrypt.txt -out toencrypt.b64
+
+> cat toencrypt.b64
+MjBLCTEtRG9ja2VyLnR4dAo4LDBLCTItTmV0U25pZmZpbmcucGNhcAoxNksJMi1O
+ZXRTbmlmZmluZy50eHQKOCwwSwkzLUlQc3RhdGljby50eHQKMTJLCTQtRG9ja2Vy
+Um91dGluZy50eHQKMTZLCTUtTmV0UHJvZy50eHQKMTJLCTYtaHR0cC50eHQKMTZL
+CTctZmlyZXdhbGwudHh0CjQsMEsJOC1PcGVuU1NMCjEySwlvcHotSVB2Ni50eHQK
+MTJLCW9wei13aWZpLnR4dAo=
+
+#per decriptare :
+> openssl base64 -d -in toencrypt.b64
+20K     1-Docker.txt
+8,0K    2-NetSniffing.pcap
+16K     2-NetSniffing.txt
+8,0K    3-IPstatico.txt
+12K     4-DockerRouting.txt
+16K     5-NetProg.txt
+12K     6-http.txt
+16K     7-firewall.txt
+4,0K    8-OpenSSL
+12K     opz-IPv6.txt
+12K     opz-wifi.txt
+
+# - toencrypt.aes256		(utilizzare la matricola come encryption password)	#la mia matricola e': xxxxxx
+> openssl enc -aes-256-cbc -in toencrypt.txt -out toencrypt.aes256
+enter aes-256-cbc encryption password:
+Verifying - enter aes-256-cbc encryption password:
+*** WARNING : deprecated key derivation used.
+Using -iter or -pbkdf2 would be better.
+
+> cat toencrypt.aes256
+Salted__v<NTuOr)8b"
+
+# per decriptare :
+> openssl enc -d -aes-256-cbc -in toencrypt.aes256 -out decrypted.txt
+enter aes-256-cbc decryption password:
+*** WARNING : deprecated key derivation used.
+Using -iter or -pbkdf2 would be better.
+
+> cat decrypted.txt
+20K     1-Docker.txt
+8,0K    2-NetSniffing.pcap
+16K     2-NetSniffing.txt
+8,0K    3-IPstatico.txt
+12K     4-DockerRouting.txt
+16K     5-NetProg.txt
+12K     6-http.txt
+16K     7-firewall.txt
+4,0K    8-OpenSSL
+12K     opz-IPv6.txt
+12K     opz-wifi.txt
+
+# - toencrypt.md5       (utilizzare openssl)
+> openssl dgst -md5 toencrypt.txt > toencrypt.md5
+
+> cat toencrypt.md5
+MD5(toencrypt.txt)= c8ca5a5d826afb1676da26d231f12baf
+
+
+# - toencript.md5sum		(utilizzare il comando md5sum)
+> md5sum toencrypt.txt > toencrypt.md5sum
+
+> cat toencrypt.md5sum
+c8ca5a5d826afb1676da26d231f12baf  toencrypt.txt
+
+# si puo' controllare l'integrita'  del file, ossia se ' stato modificato con il seguente comando:
+> md5sum -c toencrypt.md5sum
+toencrypt.txt: OK
+
+
+# - toencrypt.hmac		(utilizzare md5 e la matricola come hmac)	#la matricola e' xxxxxx
+> openssl dgst -sha256 -hmac md5<MATRICOLA> toencrypt.txt
+HMAC-SHA256(toencrypt.txt)= e0cdb437379ebf093380a785c3da3e82c9bda8497372530d4e6e2bd900b7048c
+
+
+# Generate le vostre chiavi RSA   cognome_rsa_pub.pem e cognome_rsa_key.pem con 2048 bit
+> openssl genpkey -algorithm RSA -out arcari_rsa_pub.pem -pkeyopt rsa_keygen_bits:2048
+.+++++
+........................+++++
+
+> cat arcari_rsa_pub.pem
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCttDTOKHLPUxFd
+IKImtCf2gnKh7yaI3n93nagQBoFN+ry96UumInRjsWgF3eY9fNN11C4+qnS8HFgI
+...[CONTENUTO CHIAVE RIMOSSO PER SICUREZZA]...
+wrOPunPV9GShjc4EjyKHJAXmDih1bqCXCvchTDz5elQ5QoW4u/pTYVTEp8nhhZPZ
+euKAYXxcKn1WXxHavArPdos=
+-----END PRIVATE KEY-----
+
+> openssl genpkey -algorithm RSA -out arcari_rsa_key.pem -pkeyopt rsa_keygen_bits:2048
+.........+++++
+....................+++++
+
+> cat arcari_rsa_key.pem> openssl genpkey -algorithm RSA -out arcari_rsa_key.pem -pkeyopt rsa_keygen_bits:2048
+.........+++++
+....................+++++
+
+> cat arcari_rsa_key.pem
+-----BEGIN PRIVATE KEY-----
+MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDJEj3wACTfuQo/
+hw1PfHx0f8Smrxhb1/1hsQ+WvHXzH8mX1Z4+6X27DoYnFyLIWbtVEm15MTDx9Rps
+...[CONTENUTO CHIAVE RIMOSSO PER SICUREZZA]...
+vFYDGFKI6cV/t4qxp/oB1HStFbkqBqOjUl1koijudj9Cnb5B8KLskP2S9jZN4y77
+F66btOea6RiKeBpmNiq1b2oQFA==
+-----END PRIVATE KEY-----
+
+# Scrivere nel file toencrypt.rsa_sign la firma di toencrypt.txt con la vostra chiave privata
+
+> openssl dgst -sha1 -sign arcari_rsa_key.pem -out toencrypt.rsa_sign toencrypt.txt
+
+> cat toencrypt.rsa_sign
+|?LJn?}?~?:?Ò½{/{Ï­HHoLWG0?yH\t
+
+
+#per la verifica:
+> openssl dgst -sha1 -verify arcari_rsa_pub.pem -signature toencrypt.rsa_sign toencrypt.txt
+unable to load key file
+
+# Scrivere in toencrypt.rsa_crypt  la cifratura di toencrypt.txt con la chiave pubbilca del docente --> cp /home/alfieri/html/matdid/RETI/security/rsa/alfieri_rsa_pub.pem
+> openssl dgst -sha1 -sign /home/alfieri/html/matdid/RETI/security/rsa/alfieri_rsa_pub.pem -out toencrypt.rsa_crypt toencrypt.txt
+unable to load key file
+140654786912704:error:0909006C:PEM routines:get_name:no start line:../crypto/pem/pem_lib.c:745:Expecting: ANY PRIVATE KEY

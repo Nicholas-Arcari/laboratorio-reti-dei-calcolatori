@@ -1,0 +1,191 @@
+  _           _                     _             _                      ______      _              
+ | |         | |                   | |           (_)                    |  ____|    | |             
+ | |     __ _| |__   ___  _ __ __ _| |_ ___  _ __ _  ___      ______    | |__  __  _| |_ _ __ __ _  
+ | |    / _` | '_ \ / _ \| '__/ _` | __/ _ \| '__| |/ _ \    |______|   |  __| \ \/ / __| '__/ _` | 
+ | |___| (_| | |_) | (_) | | | (_| | || (_) | |  | | (_) |              | |____ >  <| |_| | | (_| | 
+ |______\__,_|_.__/ \___/|_|  \__,_|\__\___/|_|  |_|\___/               |______/_/\_\\__|_|  \__,_|
+ 
+ 
+ 
+
+
+
+# Durante il laboratorio verra' acceso un Access Point WiFi isolato con SSID "xxxx" e pass "xxxxxxxxxx".
+
+# Attivare il compose IPStatico. L'host esporra' le porte con port-forwarding del container: 20xx (ssh) e 80xx (nginx).
+
+# Dopo essermi collegato al router del professore, eseguendo il comando "ifconfig" oppure "ip a" ho notato che il mio dispositivo aveva ip dimanico: 192.168.1.106
+# Inoltre mi preme informare che tutti i comandi sottostanti sono stati eseguiti non da docker, bensi' da shell		-->	  purtroppo ho dovuto formattare il SO Kali Linux (per l'ennesima volta -.-) causa problemi di provenienza ignota, per il giorno del laboratorio non sono riuscito in tempo a re-impostare il docker ns11 come fatto per il laboratoirio 3-IPstatico.
+
+
+
+
+# Scansione della rete con nmap del dispositivo del professore:
+> nmap 192.168.1.100             
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-10-15 16:25 CEST
+Nmap scan report for 192.168.1.100
+Host is up (0.0037s latency).
+Not shown: 997 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+2968/tcp open  enpp
+6000/tcp open  X11
+8011/tcp open  unknown
+MAC Address: xx:xx:xx:xx:xx:xx (Bizlink Technology)
+
+Nmap done: 1 IP address (1 host up) scanned in 23.48 seconds
+
+
+
+# Scansione della rete con tcpdump del dispositivo del professore (mentre cercava di cambiare impostazioni sul firewall di windows)
+> sudo tcpdump -z 192.168.1.100
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on wlan0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+16:28:32.992727 IP 192.168.1.103.mdns > 224.0.0.251.mdns: 0 PTR (QM)? 1.1.168.192.in-addr.arpa.local. (48)
+16:28:32.994895 IP 192.168.1.103.mdns > 224.0.0.251.mdns: 0 PTR (QM)? 6.1.168.192.in-addr.arpa.local. (48)
+16:28:33.000411 IP 192.168.1.103.mdns > 224.0.0.251.mdns: 0 PTR (QM)? 9.1.168.192.in-addr.arpa.local. (48)
+16:28:33.004118 IP6 fe80::f064:e391:4b9b:1240.mdns > ff02::fb.mdns: 0 PTR (QM)? 2.1.168.192.in-addr.arpa.local. (48)
+16:28:33.005444 IP 192.168.1.103.mdns > 224.0.0.251.mdns: 0 PTR (QM)? 4.1.168.192.in-addr.arpa.local. (48)
+16:28:33.055245 IP 192.168.1.106.51949 > 192.168.1.251.domain: 10662+ PTR? 251.0.0.224.in-addr.arpa. (42)
+16:28:33.515787 ARP, Request who-has 192.168.1.173 tell 192.168.1.103, length 28
+16:28:33.527680 ARP, Request who-has 192.168.1.204 tell 192.168.1.103, length 28
+16:28:33.535174 ARP, Request who-has 192.168.1.231 tell 192.168.1.103, length 28
+^C
+9 packets captured
+3579 packets received by filter
+3508 packets dropped by kernel
+
+
+
+# Accesso al docker ns11 (3-IPstatico) al computer MacOS della mia compagna di corso con porta 20
+> ssh ubuntu@192.168.1.107 -p 2087
+The authenticity of host '[192.168.1.107]:2087 ([192.168.1.107]:2087)' can't be established.
+ED25519 key fingerprint is SHA256:vCr9WGHV+iJ9AvdcI6Jlm5HrdYV3lzkK23PBeuQnMAA.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '[192.168.1.107]:2087' (ED25519) to the list of known hosts.
+ubuntu@192.168.1.107's password: 
+Permission denied, please try again.
+ubuntu@192.168.1.107's password: 
+Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.10.0-linuxkit x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+Last login: Sat Oct 12 07:28:47 2024 from 192.168.65.1
+Environment:
+  LANG=C.UTF-8
+  USER=ubuntu
+  LOGNAME=ubuntu
+  HOME=/home/ubuntu
+  PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+  SHELL=/bin/bash
+  TZ=UTC
+  TERM=xterm-256color
+  SSH_CLIENT=192.168.65.1 55734 22
+  SSH_CONNECTION=192.168.65.1 55734 172.21.0.87 22
+  SSH_TTY=/dev/pts/1
+ubuntu@ns11:
+ubuntu@ns11:
+ubuntu@ns11: exit
+logout
+
+
+
+# Accesso al docker ns11 (3-IPstatico) al computer MacOS della mia compagna di corso con porta 80
+> curl ubuntu@192.168.1.107:8087/url.html
+<html lang="it"> <head> <meta content="origin" name="referrer">  <script nonce="yJt1euKpBfHw6sVmcByYUA">window.google = {};(function(){
+var d=/^\s*(?!javascript:)(?:[\w+.-]+:|[^:/?#]*(?:[/?#]|$))/i;
+(this||self).google.navigateTo=function(a,c,b){!/\/.*?[&?]gsc=1/.test(c.location.href)&&a!==c&&a.google?a.google.r&&(a.google.r=0,a=a.location,b=d.test(b)?b:void 0,b!==void 0&&(a.href=b),c.location.replace("about:blank")):c.location.replace(b)};}).call(this);(function(){var redirectUrl='http://didatticainfo.altervista.org/Quinta/DataLink.pdf';google.navigateTo(parent,window,redirectUrl);})();</script> <noscript> <meta content="0;url=http://didatticainfo.altervista.org/Quinta/DataLink.pdf" http-equiv="refresh"> </noscript> </head>  </html>
+
+
+
+# Accesso al docker ns11 (3-IPstatico) al computer Windows del professore
+# non funziona, probabile causa e' che il professore si e' staccato dalla rete senza accorgersene, in quanto il computer si collega in automatico alla rete piu' prestante salvata (probabilmente unipr-wpa), questo e' possibile dal motivo che la sua rete personale (a cui tutti noi avevamo acceduto) era estremamente sotto sforzo
+> ssh ubuntu@192.168.1.100 -p 2011
+kex_exchange_identification: read: Connection reset by peer
+Connection reset by 192.168.1.100 port 2011
+
+
+
+# Scansione della rete con tcpdump del dispositivo della compagna avente MacOS
+> sudo tcpdump -z 192.168.1.107   
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on wlan0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+16:50:00.386741 IP 192.168.1.106.48913 > 192.168.1.251.domain: 44552+ A? 1.debian.pool.ntp.org. (39)
+16:50:00.386835 IP 192.168.1.106.48913 > 192.168.1.251.domain: 59403+ AAAA? 1.debian.pool.ntp.org. (39)
+16:50:00.397777 IP 192.168.1.106.57667 > 192.168.1.251.domain: 30361+ PTR? 251.1.168.192.in-addr.arpa. (44)
+16:50:00.437443 IP 192.168.1.109.mdns > 224.0.0.251.mdns: 0 PTR (QM)? _microsoft_mcc._tcp.local. (43)
+^C
+4 packets captured
+414 packets received by filter
+362 packets dropped by kernel
+
+
+
+#Ho provato con un collega universitario che ha windows, sono riuscito a trovarlo con la porta 22, si vede non aveva come password dell'user ubuntu: "ubuntu"
+> ssh ubuntu@192.168.1.104        
+The authenticity of host '192.168.1.104 (192.168.1.104)' can't be established.
+ED25519 key fingerprint is SHA256:yHKeMsGbQLpkFk1DaDD19+frxPG08n8DSXzKCmw7jEo.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168.1.104' (ED25519) to the list of known hosts.
+(ubuntu@192.168.1.104) Password: 
+(ubuntu@192.168.1.104) Password: 
+(ubuntu@192.168.1.104) Password: 
+ubuntu@192.168.1.104's password: 
+Permission denied, please try again.
+ubuntu@192.168.1.104's password: 
+Permission denied, please try again.
+ubuntu@192.168.1.104's password: 
+Received disconnect from 192.168.1.104 port 22:2: Too many authentication failures
+Disconnected from 192.168.1.104 port 22
+
+
+
+# Abbiamo passato gli ultimi minuti di laboratorio tracciando la connessione di www.unipr.it
+> traceroute 160.78.48.10                                                    
+traceroute to 160.78.48.10 (160.78.48.10), 30 hops max, 60 byte packets
+ 1  192.168.1.251 (192.168.1.251)  3.724 ms  3.623 ms  3.579 ms
+ 2  * * *
+ 3  * * *
+ 4  * * *
+ 5  * * *
+ 6  * * *
+ 7  * * *
+ 8  * * *
+ 9  * * *
+10  * * *
+11  * * *
+12  * * *
+13  * * *
+14  * * *
+15  * * *
+16  * * *
+17  * * *
+18  * * *
+19  * * *
+20  * * *
+21  * * *
+22  * * *
+23  * * *
+24  * * *
+25  * * *
+26  * * *
+27  * * *
+28  * * *
+29  * * *
+30  * * *
+
+
+
+> ping 160.78.48.10
+PING 160.78.48.10 (160.78.48.10) 56(84) bytes of data.
+^C
+--- 160.78.48.10 ping statistics ---
+24 packets transmitted, 0 received, 100% packet loss, time 23544ms
+# da errori per, probabilmente, un mio problema di configuarzione interna del SO (Kali Linux)

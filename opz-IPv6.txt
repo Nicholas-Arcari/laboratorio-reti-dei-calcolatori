@@ -1,0 +1,258 @@
+  _           _                     _             _                      ______      _              
+ | |         | |                   | |           (_)                    |  ____|    | |             
+ | |     __ _| |__   ___  _ __ __ _| |_ ___  _ __ _  ___      ______    | |__  __  _| |_ _ __ __ _  
+ | |    / _` | '_ \ / _ \| '__/ _` | __/ _ \| '__| |/ _ \    |______|   |  __| \ \/ / __| '__/ _` | 
+ | |___| (_| | |_) | (_) | | | (_| | || (_) | |  | | (_) |              | |____ >  <| |_| | | (_| | 
+ |______\__,_|_.__/ \___/|_|  \__,_|\__\___/|_|  |_|\___/               |______/_/\_\\__|_|  \__,_|
+
+
+
+
+	----------------------------------------
+		+++++ Docker IPv6 +++++
+	----------------------------------------
+
+> docker network create --ipv6 --subnet 2001:760::/112 ip6net
+8b45ef6307e956d29d4b902bfcb364897ba0a6cffc8776741fe5aa96dd93a7df
+
+
+> docker network ls
+NETWORK ID     NAME      DRIVER    SCOPE
+7fd3fe735a0a   bridge    bridge    local
+8b45ef6307e9   ip6net    bridge    local
+
+
+> docker network inspect ip6net
+[
+    {
+        "Name": "ip6net",
+        "Id": "8b45ef6307e956d29d4b902bfcb364897ba0a6cffc8776741fe5aa96dd93a7df",
+        "Created": "2024-10-16T11:13:32.941826209+02:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": true,
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [
+                {
+                    "Subnet": "2001:760::/112"
+                },
+                {
+                    "Subnet": "172.18.0.0/16",
+                    "Gateway": "172.18.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {},
+        "Options": {},
+        "Labels": {}
+    }
+]
+
+
+
+	-----------------------------------------------------
+		+++++ Docker IPv6 : comandi +++++
+	-----------------------------------------------------
+
+# La rete puo' essere associata ad un container, ad esempio:
+> docker run -d --name ns62 --network ip6net cyberteam1/nginx-ssh
+97fb1a387d51e7f8dc2f89d09cdac23c344ba6a03835192014766d24e57a9207
+
+
+> docker run -d --name ns63 --network ip6net cyberteam1/nginx-ssh
+97b477c163027cc1fdc668053c44907ba20e3dda88cd3daa8f8ff5e9d181fe6b
+
+
+> docker ps
+CONTAINER ID   IMAGE                  COMMAND                  CREATED              STATUS              PORTS            NAMES
+97b477c16302   cyberteam1/nginx-ssh   "/docker-entrypoint..."   55 seconds ago       Up 53 seconds       22/tcp, 80/tcp   ns63
+97fb1a387d51   cyberteam1/nginx-ssh   "/docker-entrypoint..."   About a minute ago   Up About a minute   22/tcp, 80/tcp   ns62
+
+
+> docker exec -it ns62 bash
+root@97fb1a387d51:/#
+root@97fb1a387d51:/#  ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+7: eth0@if8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:ac:12:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.18.0.2/16 brd 172.18.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 2001:760::2/112 scope global nodad 
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:acff:fe12:2/64 scope link 
+       valid_lft forever preferred_lft forever
+
+
+root@97fb1a387d51:/# nmap 172.18.0.0/29
+Starting Nmap 7.93 ( https://nmap.org ) at 2024-10-16 09:21 UTC
+Nmap scan report for 172.18.0.1
+Host is up (0.000013s latency).
+All 1000 scanned ports on 172.18.0.1 are in ignored states.
+Not shown: 1000 closed tcp ports (reset)
+MAC Address: 02:42:9C:1F:13:7B (Unknown)
+
+Nmap scan report for ns63.ip6net (172.18.0.3)
+Host is up (0.000019s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+MAC Address: 02:42:AC:12:00:03 (Unknown)
+
+Nmap scan report for 97fb1a387d51 (172.18.0.2)
+Host is up (0.0000080s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap done: 8 IP addresses (3 hosts up) scanned in 1.91 seconds
+
+
+root@97fb1a387d51:/# nmap -6 2001:760::/125
+Starting Nmap 7.93 ( https://nmap.org ) at 2024-10-16 09:22 UTC
+Nmap scan report for 2001:760::
+Host is up (0.38s latency).
+All 1000 scanned ports on 2001:760:: are in ignored states.
+Not shown: 1000 filtered tcp ports (no-response)
+MAC Address: 02:42:9C:1F:13:7B (Unknown)
+
+Nmap scan report for 2001:760::1
+Host is up (0.000028s latency).
+All 1000 scanned ports on 2001:760::1 are in ignored states.
+Not shown: 1000 closed tcp ports (reset)
+MAC Address: 02:42:9C:1F:13:7B (Unknown)
+
+Nmap scan report for ns63.ip6net (2001:760::3)
+Host is up (0.00012s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+MAC Address: 02:42:AC:12:00:03 (Unknown)
+
+Nmap scan report for 97fb1a387d51 (2001:760::2)
+Host is up (0.000016s latency).
+Not shown: 998 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap done: 8 IP addresses (4 hosts up) scanned in 67.09 seconds
+root@97fb1a387d51:/# exit
+exit
+
+
+> docker exec ns62 ping 172.18.0.3
+PING 172.18.0.3 (172.18.0.3) 56(84) bytes of data.
+64 bytes from 172.18.0.3: icmp_seq=1 ttl=64 time=0.084 ms
+64 bytes from 172.18.0.3: icmp_seq=2 ttl=64 time=0.113 ms
+64 bytes from 172.18.0.3: icmp_seq=3 ttl=64 time=0.116 ms
+64 bytes from 172.18.0.3: icmp_seq=4 ttl=64 time=0.116 ms
+64 bytes from 172.18.0.3: icmp_seq=5 ttl=64 time=0.115 ms
+64 bytes from 172.18.0.3: icmp_seq=6 ttl=64 time=0.117 ms
+64 bytes from 172.18.0.3: icmp_seq=7 ttl=64 time=0.113 ms
+64 bytes from 172.18.0.3: icmp_seq=8 ttl=64 time=0.117 ms
+^C
+
+
+> docker exec ns62 ping6 2001:760::3
+PING 2001:760::3(2001:760::3) 56 data bytes
+64 bytes from 2001:760::3: icmp_seq=1 ttl=64 time=0.033 ms
+64 bytes from 2001:760::3: icmp_seq=2 ttl=64 time=0.056 ms
+64 bytes from 2001:760::3: icmp_seq=3 ttl=64 time=0.070 ms
+64 bytes from 2001:760::3: icmp_seq=4 ttl=64 time=0.110 ms
+64 bytes from 2001:760::3: icmp_seq=5 ttl=64 time=0.095 ms
+64 bytes from 2001:760::3: icmp_seq=6 ttl=64 time=0.092 ms
+64 bytes from 2001:760::3: icmp_seq=7 ttl=64 time=0.093 ms
+^C
+
+
+> curl [2001:760::3]/index.nginx-debian.html
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+html { color-scheme: light dark; }
+body { width: 35em; margin: 0 auto;
+font-family: Tahoma, Verdana, Arial, sans-serif; }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+
+
+	
+	------------------------------------------------------------------
+		+++++ Docker IPv6 : comandi con compose.yml +++++
+	------------------------------------------------------------------
+
+#dopo aver "aggiustato" il file compose.yml nella voce "volumes: ../Scrivania/RetiDeiCalcolatori/RETI2425/html:/var/www/html"
+> docker-compose up -d
+Creating ns62 ... done
+Creating ns63 ... done
+
+
+> docker-compose ps   
+Name              Command               State       Ports     
+--------------------------------------------------------------
+ns62   /docker-entrypoint.sh ngin ...   Up      22/tcp, 80/tcp
+ns63   /docker-entrypoint.sh ngin ...   Up      22/tcp, 80/tcp
+
+
+# connessione ssh IPv6
+> ssh ubuntu@2001:760::63
+The authenticity of host '2001:760::63 (2001:760::63)' can't be established.
+ED25519 key fingerprint is SHA256:LB3Ms/DT4dEpcYsnq3DdXfojqT08VDApPMh1fdmSV90.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '2001:760::63' (ED25519) to the list of known hosts.
+ubuntu@2001:760::63's password: 
+Welcome to Ubuntu 23.04 (GNU/Linux 6.10.11-amd64 x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+ubuntu@ns63:~$exit
+logout
+Connection to 2001:760::63 closed.
+

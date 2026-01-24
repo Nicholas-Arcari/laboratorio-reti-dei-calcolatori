@@ -1,0 +1,322 @@
+  _                _                              _                    _                 __  
+ | |              | |                            | |                  (_)               / /  
+ | |        __ _  | |__     ___    _ __    __ _  | |_    ___    _ __   _    ___        / /_  
+ | |       / _` | | '_ \   / _ \  | '__|  / _` | | __|  / _ \  | '__| | |  / _ \      | '_ \ 
+ | |____  | (_| | | |_) | | (_) | | |    | (_| | | |_  | (_) | | |    | | | (_) |     | (_) |
+ |______|  \__,_| |_.__/   \___/  |_|     \__,_|  \__|  \___/  |_|    |_|  \___/       \___/ 
+                                                                                             
+
+
+
+	------------------------------------------------------------------------------------------
+		+++++ Configurare un server HTTP, con virtual host e pagine dinamiche +++++
+	------------------------------------------------------------------------------------------
+	
+# Setup nel volume condiviso:
+
+> mkdir RETI2425/DockerHTTP/
+
+> cd RETI2425/DockerHTTP/
+
+
+> wget http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/HTTP/compose.yml
+--2024-11-12 11:03:09--  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/HTTP/compose.yml
+Risoluzione di didattica-linux.unipr.it (didattica-linux.unipr.it)... 160.78.50.165
+Connessione a didattica-linux.unipr.it (didattica-linux.unipr.it)|160.78.50.165|:80... connesso.
+Richiesta HTTP inviata, in attesa di risposta... 200 OK
+Lunghezza: 566
+Salvataggio in: «compose.yml»
+
+compose.yml          100%[=====================>]     566  --.-KB/s    in 0s      
+
+2024-11-12 11:03:10 (16,8 MB/s) - «compose.yml» salvato [566/566]
+
+
+#Aggiustare la porta esposta da ns3 che deve essere 80xx
+
+> more compose.yml
+services:
+  ns3:
+    privileged: true
+    container_name: ns3
+    hostname: ns3
+    image: cyberteam1/nginx-ssh
+    network_mode: bridge
+    ports:
+      - "8006:8006"
+    volumes:
+      - '../Scrivania/Unipr/RetiDeiCalcolatori/RETI2425/DockerHTTP:/var/www/html'
+
+
+  ns2:
+    container_name: ns2
+    hostname: ns2
+    image: cyberteam1/nginx-ssh
+    network_mode: bridge
+    volumes:
+      - '../Scrivania/Unipr/RetiDeiCalcolatori/RETI2425/DockerHTTP:/var/www/html'
+
+
+> docker-compose up -d
+Creating ns3 ... done
+Creating ns2 ... done
+# Utilizzeremo ns3 come server e ns2 come client.
+
+
+#Download in RETI2425/DockerHTTP/ anche  del tar file che include i programmi da utilizzare.
+
+> wget  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/progHTTP.tgz
+--2024-11-12 11:09:11--  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/progHTTP.tgz
+Risoluzione di didattica-linux.unipr.it (didattica-linux.unipr.it)... 160.78.50.165
+Connessione a didattica-linux.unipr.it (didattica-linux.unipr.it)|160.78.50.165|:80... connesso.
+Richiesta HTTP inviata, in attesa di risposta... 200 OK
+Lunghezza: 7592 (7,4K) [application/x-gzip]
+Salvataggio in: «progHTTP.tgz»
+
+progHTTP.tgz         100%[=====================>]   7,41K  --.-KB/s    in 0s      
+
+2024-11-12 11:09:12 (277 MB/s) - «progHTTP.tgz» salvato [7592/7592]
+
+
+# Scompattare il tar:
+> tar xzvf progHTTP.tgz 
+progHTTP/
+progHTTP/php/
+progHTTP/php/chunked.php
+progHTTP/php/cookie1.php
+progHTTP/php/phpinfo.php
+progHTTP/php/session.php
+progHTTP/php/superglob.php
+progHTTP/php/chunked2.php
+progHTTP/index.html
+progHTTP/cgi-bin/
+progHTTP/cgi-bin/cookie1.bash
+progHTTP/cgi-bin/cookie2.bash
+progHTTP/cgi-bin/get-post.bash
+progHTTP/cgi-bin/printenv1.bash
+progHTTP/cgi-bin/printenv2.bash
+progHTTP/cgi-bin/printenv3.bash
+progHTTP/cgi-bin/urldecode.c
+progHTTP/cgi-bin/urlencode.crm -f progHTTP.tgz
+progHTTP/cgi-bin/urldecode
+progHTTP/cgi-bin/urlencode
+progHTTP/http_client.py
+
+# Per non avere dati ridondanti e permettere piÃ¹ chiarezza ho anche eliminato il file zippato:
+> rm -f progHTTP.tgz
+
+
+
+	------------------------------------------------------
+		+++++ Configurazione di NGINX +++++
+	------------------------------------------------------
+
+# Verifica Configurazione generale in /etc/nginx/nginx.conf
+> cd ../../etc/nginx/
+> cat nginx.conf          
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+        worker_connections 768;
+        # multi_accept on;
+}
+
+http {
+
+        ##
+        # Basic Settings
+        ##
+
+        sendfile on;
+        tcp_nopush on;
+        types_hash_max_size 2048;
+        # server_tokens off;
+
+        # server_names_hash_bucket_size 64;
+        # server_name_in_redirect off;
+
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        ##
+        # SSL Settings
+        ##
+
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
+        ssl_prefer_server_ciphers on;
+
+        ##
+        # Logging Settings
+        ##
+
+        access_log /var/log/nginx/access.log;			# logging eventi
+        error_log /var/log/nginx/error.log;			# logging errori
+
+        ##
+        # Gzip Settings
+        ##
+
+        gzip on;
+
+        # gzip_vary on;
+        # gzip_proxied any;
+        # gzip_comp_level 6;
+        # gzip_buffers 16 8k;
+        # gzip_http_version 1.1;
+        # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+        ##
+        # Virtual Host Configs
+        ##
+
+        include /etc/nginx/conf.d/*.conf;
+        include /etc/nginx/sites-enabled/*;			# carica i file in site-enabled
+}
+
+
+#mail {
+#       # See sample authentication script at:
+#       # http://wiki.nginx.org/ImapAuthenticateWithApachePhpScript
+#
+#       # auth_http localhost/auth.php;
+#       # pop3_capabilities "TOP" "USER";
+#       # imap_capabilities "IMAP4rev1" "UIDPLUS";
+#
+#       server {
+#               listen     localhost:110;
+#               protocol   pop3;
+#               proxy      on;
+#       }
+#
+#       server {
+#               listen     localhost:143;
+#               protocol   imap;
+#               proxy      on;
+#       }
+#}
+
+
+
+# Verifica Server default in   /etc/nginx/sites-available/default
+> cd ../../etc/nginx/sites-available/
+> cat default       
+##
+# You should look at the following URL's in order to grasp a solid understanding
+# of Nginx configuration files in order to fully unleash the power of Nginx.
+# https://www.nginx.com/resources/wiki/start/
+# https://www.nginx.com/resources/wiki/start/topics/tutorials/config_pitfalls/
+# https://wiki.debian.org/Nginx/DirectoryStructure
+#
+# In most cases, administrators will remove this file from sites-enabled/ and
+# leave it as reference inside of sites-available where it will continue to be
+# updated by the nginx packaging team.
+#
+# This file will automatically load configuration files provided by other
+# applications, such as Drupal or Wordpress. These applications will be made
+# available underneath a path with that package name, such as /drupal8.
+#
+# Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
+##
+
+# Default server configuration
+#
+server {
+        listen 80 default_server;			# porta di ascolto
+        listen [::]:80 default_server;
+
+        # SSL configuration
+        #
+        # listen 443 ssl default_server;
+        # listen [::]:443 ssl default_server;
+        #
+        # Note: You should disable gzip for SSL traffic.
+        # See: https://bugs.debian.org/773332
+        #
+        # Read up on ssl_ciphers to ensure a secure configuration.
+        # See: https://bugs.debian.org/765782
+        #
+        # Self signed certs generated by the ssl-cert package
+        # Don't use them in a production server!
+        #
+        # include snippets/snakeoil.conf;
+
+        root /var/www/html;				# root directory
+
+        # Add index.php to the list if you are using PHP
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name _;
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ =404;
+        }
+
+        # pass PHP scripts to FastCGI server
+        #
+        #location ~ \.php$ {
+        #       include snippets/fastcgi-php.conf;
+        #
+        #       # With php-fpm (or other unix sockets):
+        #       fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        #       # With php-cgi (or other tcp sockets):
+        #       fastcgi_pass 127.0.0.1:9000;
+        #}
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        #location ~ /\.ht {
+        #       deny all;
+        #}
+}
+
+
+# Virtual Host configuration for example.com
+#
+# You can move that to a different file under sites-available/ and symlink that
+# to sites-enabled/ to enable it.
+#
+#server {
+#       listen 80;
+#       listen [::]:80;
+#
+#       server_name example.com;
+#
+#       root /var/www/example.com;
+#       index index.html;
+#
+#       location / {
+#               try_files $uri $uri/ =404;
+#       }
+#}
+
+
+
+# Attivazione Virtual Host 
+# Editare /etc/nginx/sites-available/default e abilitare il virtual host con nome vh1 su porta 80xx; occorre modificare la porta di ascolto e la root directory
+> cat default
+server {
+        listen 8006;
+        server_name vh1;
+        root /var/www/html/progHTTP/;
+}
+
+
+> service nginx reload
+
+
+#accedere al server da ns2  
+
+> curl http://172.17.0.3:8000/index.html
+
+
+# Attivazione supporto PHP nel Virtual Host
+
+
+
+

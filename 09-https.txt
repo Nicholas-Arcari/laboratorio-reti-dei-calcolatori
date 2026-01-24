@@ -1,0 +1,488 @@
+  _                _                              _                    _              ___  
+ | |              | |                            | |                  (_)            / _ \ 
+ | |        __ _  | |__     ___    _ __    __ _  | |_    ___    _ __   _    ___     | (_) |
+ | |       / _` | | '_ \   / _ \  | '__|  / _` | | __|  / _ \  | '__| | |  / _ \     \__, |
+ | |____  | (_| | | |_) | | (_) | | |    | (_| | | |_  | (_) | | |    | | | (_) |      / / 
+ |______|  \__,_| |_.__/   \___/  |_|     \__,_|  \__|  \___/  |_|    |_|  \___/      /_/  
+                                                                                           
+                                                                                           
+
+
+	------------------------------------------------------------
+		Configurazione  di un  Virtual Host  HTTPS
+	------------------------------------------------------------
+
+# Avviso: questa task e' stata fatta usando la wsl "kali-linux" su un pc con sistema opertivo Windows --> causa di cio': non funziona forticlient VPN sul mio computer con kali linux come sistema operativo.
+# Configuriamo NGINX   aggiungendo un Virtual Host HTTPS  https://techexpert.tips/it/nginx-it/abilitare-https-su-nginxenable-https-on-nginx/
+
+
+> sudo apt update -y
+[sudo] password for nick:
+Get:1 http://kali.download/kali kali-last-snapshot InRelease [41.5 kB]
+Get:2 http://kali.download/kali kali-last-snapshot/main amd64 Packages [20.3 MB]
+Get:3 http://kali.download/kali kali-last-snapshot/main amd64 Contents (deb) [49.4 MB]
+Get:4 http://kali.download/kali kali-last-snapshot/contrib amd64 Packages [112 kB]
+Get:5 http://kali.download/kali kali-last-snapshot/contrib amd64 Contents (deb) [274 kB]
+Get:6 http://kali.download/kali kali-last-snapshot/non-free amd64 Packages [197 kB]
+Get:7 http://kali.download/kali kali-last-snapshot/non-free amd64 Contents (deb) [877 kB]
+Get:8 http://kali.download/kali kali-last-snapshot/non-free-firmware amd64 Packages [10.6 kB]
+Get:9 http://kali.download/kali kali-last-snapshot/non-free-firmware amd64 Contents (deb) [23.1 kB]
+Fetched 71.2 MB in 55s (1,292 kB/s)
+209 packages can be upgraded. Run 'apt list --upgradable' to see them.
+
+
+> sudo apt install nginx openssl
+Upgrading:
+  libssl3t64  openssl
+
+Installing:
+  nginx
+
+Installing dependencies:
+  nginx-common  openssl-provider-legacy
+
+Suggested packages:
+  fcgiwrap  nginx-doc  ssl-cert
+
+Summary:
+  Upgrading: 2, Installing: 3, Removing: 0, Not Upgrading: 207
+  Download size: 4,667 kB
+  Space needed: 2,318 kB / 1,025 GB available
+
+Continue? [Y/n] y
+Get:1 http://kali.download/kali kali-last-snapshot/main amd64 openssl-provider-legacy amd64 3.3.2-2 [298 kB]
+Get:4 http://http.kali.org/kali kali-last-snapshot/main amd64 nginx amd64 1.26.0-3+b1 [609 kB]
+Get:2 http://kali.download/kali kali-last-snapshot/main amd64 libssl3t64 amd64 3.3.2-2 [2,271 kB]
+Get:3 http://kali.download/kali kali-last-snapshot/main amd64 nginx-common all 1.26.0-3 [108 kB]
+Get:5 http://kali.download/kali kali-last-snapshot/main amd64 openssl amd64 3.3.2-2 [1,382 kB]
+Fetched 4,667 kB in 4s (1,240 kB/s)
+Preconfiguring packages ...
+(Reading database ... 30034 files and directories currently installed.)
+Preparing to unpack .../libssl3t64_3.3.2-2_amd64.deb ...
+Unpacking libssl3t64:amd64 (3.3.2-2) over (3.2.2-1) ...
+Selecting previously unselected package openssl-provider-legacy.
+Preparing to unpack .../openssl-provider-legacy_3.3.2-2_amd64.deb ...
+Unpacking openssl-provider-legacy (3.3.2-2) ...
+Setting up libssl3t64:amd64 (3.3.2-2) ...
+Setting up openssl-provider-legacy (3.3.2-2) ...
+Selecting previously unselected package nginx-common.
+(Reading database ... 30038 files and directories currently installed.)
+Preparing to unpack .../nginx-common_1.26.0-3_all.deb ...
+Unpacking nginx-common (1.26.0-3) ...
+Selecting previously unselected package nginx.
+Preparing to unpack .../nginx_1.26.0-3+b1_amd64.deb ...
+Unpacking nginx (1.26.0-3+b1) ...
+Preparing to unpack .../openssl_3.3.2-2_amd64.deb ...
+Unpacking openssl (3.3.2-2) over (3.2.2-1) ...
+Setting up nginx-common (1.26.0-3) ...
+update-rc.d: We have no instructions for the nginx init script.
+update-rc.d: It looks like a network service, we disable it.
+Setting up openssl (3.3.2-2) ...
+Setting up nginx (1.26.0-3+b1) ...
+invoke-rc.d: could not determine current runlevel
+Processing triggers for libc-bin (2.38-13) ...
+
+
+>mkdir Scrivania/RETI2425/DockerHTTPS
+
+> cd Scrivania/RETI2425/DockerHTTPS
+
+
+> wget http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/HTTPS/compose.yml
+--2024-12-07 19:22:31--  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/HTTPS/compose.yml
+Resolving didattica-linux.unipr.it (didattica-linux.unipr.it)... 160.78.50.165
+Connecting to didattica-linux.unipr.it (didattica-linux.unipr.it)|160.78.50.165|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 570
+Saving to: <<compose.yml>>
+
+compose.yml                                         100%[=================================================================================================================>]     570  --.-KB/s    in 0s
+
+2024-12-07 19:22:31 (76.0 MB/s) - <<compose.yml>> saved [570/570]
+
+
+> wget http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/HTTPS/index.html
+--2024-12-07 19:23:33--  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/HTTPS/index.html
+Resolving didattica-linux.unipr.it (didattica-linux.unipr.it)... 160.78.50.165
+Connecting to didattica-linux.unipr.it (didattica-linux.unipr.it)|160.78.50.165|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 19 [text/html]
+Saving to: â€˜index.htmlâ€™
+
+index.html                                          100%[=================================================================================================================>]      19  --.-KB/s    in 0s
+
+2024-12-07 19:23:33 (2.19 MB/s) - <<index.html>> saved [19/19]
+
+
+# Programmazione https con Python a livello trasporto:
+> wget http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/HTTPS/https_client_transp.py
+--2024-12-07 19:25:10--  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/HTTPS/https_client_transp.py
+Resolving didattica-linux.unipr.it (didattica-linux.unipr.it)... 160.78.50.165
+Connecting to didattica-linux.unipr.it (didattica-linux.unipr.it)|160.78.50.165|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1094 (1.1K) [text/x-python]
+Saving to: <<https_client_transp.py>>
+
+https_client_transp.py                              100%[=================================================================================================================>]   1.07K  --.-KB/s    in 0s
+
+2024-12-07 19:25:10 (132 MB/s) - <<https_client_transp.py>> saved [1094/1094]
+
+
+# Programmazione https con python3 a livello applicazione:
+> wget http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/HTTPS/https_client_appl.py
+--2024-12-07 19:25:40--  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/HTTPS/https_client_appl.py
+Resolving didattica-linux.unipr.it (didattica-linux.unipr.it)... 160.78.50.165
+Connecting to didattica-linux.unipr.it (didattica-linux.unipr.it)|160.78.50.165|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 892 [text/x-python]
+Saving to: â€˜https_client_appl.pyâ€™
+
+https_client_appl.py                                100%[=================================================================================================================>]     892  --.-KB/s    in 0s
+
+2024-12-07 19:25:40 (98.9 MB/s) - <<https_client_appl.py>> saved [892/892]
+
+
+# Sistemate il volume del compose e avviate i container
+> nano compose.yml
+services:
+  ns3:
+    privileged: true
+    container_name: ns3
+    hostname: ns3
+    image: cyberteam1/nginx-ssh
+    network_mode: bridge
+    ports:
+      - "4443:4443"
+    volumes:
+      -  ../RETI2425/DockerHTTPS:/var/www/html
+
+
+  ns2:
+    container_name: ns2
+    hostname: ns2
+    image: cyberteam1/nginx-ssh
+    network_mode: bridge
+    volumes:
+      -  ../RETI2425/DockerHTTPS:/var/www/html
+
+
+> docker-compose up -d
+[+] Running 2/2
+ ✔ Container ns2  Started                                                                                                                                                                                1.2s
+ ✔ Container ns3  Started                                                                                                                                                                                1.3s
+
+
+> docker ps -a
+CONTAINER ID   IMAGE                  COMMAND                  CREATED          STATUS          PORTS                                    NAMES
+e988490ae61d   cyberteam1/nginx-ssh   "/docker-entrypoint..."   45 seconds ago   Up 44 seconds   22/tcp, 80/tcp                           ns2
+7c9dbca8e2be   cyberteam1/nginx-ssh   "/docker-entrypoint..."   45 seconds ago   Up 44 seconds   22/tcp, 80/tcp, 0.0.0.0:4443->4443/tcp   ns3
+
+
+# Utilizzeremo ns3 come https server e ns2 come client ( Verificare gli indirizzi dinamici assegnati a ns2 e ns3 )
+# Configuriamo il Virtual Host su ns3:
+
+> docker exec -it ns3 bash
+root@ns3:/#
+
+
+> root@ns3:/# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+7: eth0@if8: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+
+
+# Creare con openssl un certificato server self-signed:
+
+> root@ns3:/var/www/html# mkdir /etc/nginx/certificate
+
+> root@ns3:/var/www/html# cd /etc/nginx/certificate
+
+> root@ns3:/etc/nginx/certificate# openssl req -new -newkey rsa:4096 -x509 -sha256 -days 365 -nodes -out nginx-certificate.crt -keyout nginx.key
+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*.+.....+.+...+..+.............+..+....+...+......+..+....+........+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*....+...+......+......+...................+.........+......+.........+...+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+.+.....+.............+..+.+.....+.+...+..+...+.+......+.....+.+........+......+.+..+................+...........+...+.+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*............+....+..+...+........................+.+..+....+...+...+..+...+.........+.+...+......+......+..+.+.....+......+.+..+......+....+...+.....+...+.......+..+.+..+.........+...+.......+........+.+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*..............+......+.......+..+...+.......+...+.................+.+..+.+..+....+.........+............+........+.........+.+......+.....+................+.........+......+...+..+...+...................+..+...+...+...............+..........+...+......+.........+......+.....+......+.......+..+.........+.......+...+.....................+........+..........+...+..+.+......+........+.+............+.........+...........+...+.........+.......+........+.+.........+......+..+.......+..+...+...............+............+......+....+......+.....+.........+...+.......+.........+..+............+...+....+..............+.+......+............+.................+....+..+...+...................+.....+......+....+...+..+.+......+......+..............+.........+....+........+...+...............+............+.......+........+...+...............+......+.....................+...+....+..+..........+.........+..+..........+...+..+.......+..+..........+...............+.....+................+........+............+....+...+..+...................+...........+......+...+..........+.........+..+...+...............+.+......+......+..+......+....+...........+....+...+.........+...+........+...+.......+...............+.........+.....+..........+......+.......................+....+...+..+...+...........................+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:IT
+State or Province Name (full name) [Some-State]:Parma
+Locality Name (eg, city) []:
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:UniPR
+Organizational Unit Name (eg, section) []:Corso RETI
+Common Name (e.g. server FQDN or YOUR name) []:172.17.0.3
+Email Address []:nicholas.arcari@studenti.unipr.it
+
+
+> root@ns3:/etc/nginx/certificate# more nginx-certificate.crt
+-----BEGIN CERTIFICATE-----
+MIIF9TCCA92gAwIBAgIUUtu4G0mkGE5OvwYYiRc9OP14l/8wDQYJKoZIhvcNAQEL
+BQAwgYkxCzAJBgNVBAYTAklUMQ4wDAYDVQQIDAVQYXJtYTEOMAwGA1UECgwFVW5p
+UFIxEzARBgNVBAsMCkNvcnNvIFJFVEkxEzARBgNVBAMMCjE3Mi4xNy4wLjMxMDAu
+BgkqhkiG9w0BCQEWIW5pY2hvbGFzLmFyY2FyaUBzdHVkZW50aS51bmlwci5pdDAe
+Fw0yNDEyMDcxODM3MDVaFw0yNTEyMDcxODM3MDVaMIGJMQswCQYDVQQGEwJJVDEO
+MAwGA1UECAwFUGFybWExDjAMBgNVBAoMBVVuaVBSMRMwEQYDVQQLDApDb3JzbyBS
+RVRJMRMwEQYDVQQDDAoxNzIuMTcuMC4zMTAwLgYJKoZIhvcNAQkBFiFuaWNob2xh
+cy5hcmNhcmlAc3R1ZGVudGkudW5pcHIuaXQwggIiMA0GCSqGSIb3DQEBAQUAA4IC
+DwAwggIKAoICAQChdmlOH1Jz3cjeYkd8fIgckMlXtRtxwoFbvWSYxOfqr7/9XES8
+FdvpV7r9UHy0haBp4dXT1JEwar7/gvHA6vLHlD4Mx3siamPqgXtQVRq2BSswB4W0
+rtVN8N1EPVUP6mzhrAmLdvx2zgb/K/JsKMPGYYfnxxMOUx2DCfwtOtKPFJLu7Nt8
+f7CEzJECXNddiYN0TQhNwRdnjjFZmCs51oZAo8gkXWU28AjNRCkHLZq98JSonQNv
+OpiZcM7gywmqu8h+rgG8hbNTkln4iYmxkyAZk9sd6S2E7Oikd7ucaxXBE/MFXQfO
+lXkigfwzCQckSL4Q8enHuhSvq4ybQuEm/AgG0oBdZoQ69v6nZOQVnryIigSQJ4Mf
+dNStxyvUk2djZbLqdivCLTcLNdPm1rxuYVvuwnxpSWtSIRTiBtb+ZmDIv4iRMBzU
+lSILsvVDn8MSnu5uq2IYbry1VVAro4EqlUhVcGw4wWeunyrAw6ICckzu2Lk4HWdr
+M80nxsegYdMEwvKPv8P3b9KjrphrAMvv7ZhnYfzqSR9lFBR9lPFn0+izWnHqskHJ
+8Yd6nnWuPjvb29I6e7ctQVYd8tUCAcgOTocmH0eNm6thRwp4Ck/45XUdj2wn0AZH
+vks2qQSqYSQ/it6hVshO9xZm6X1HTmoclr8sDauuuQ2qjUGum801OVtUuwIDAQAB
+o1MwUTAdBgNVHQ4EFgQUzGoo+ghEAJYzr2EOpSnAvdKxekkwHwYDVR0jBBgwFoAU
+zGoo+ghEAJYzr2EOpSnAvdKxekkwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0B
+AQsFAAOCAgEAk6H9wERP+fXI9DbX4kdFbNjC/U949fncvSy7vrsyuODzaFINIkAR
+iGkBCdO4e7iMg5veaJJG9O5z5V3rKtqoV6V0gMc59QMjUvE7xTW4kcpMI3DEUR3x
+dJiUDLtLtCmWRHqn22PqAav5g39RvuEb6EY9VCaUgpytVl4Ml2VExGj6OgADNrQB
+snTlBV/LL/SAm1EAc1+5TNdua6Kx78RKy2l48sYqFQYj7kh0dud/226l9lNvaRwr
+TeZol7qqVRQknfLEhejG3aFULsnrF3IZvhKfb4ytGxtqq1Pg5Oed59sDfCcCG5JJ
+zFcueJ97aQXh5L2Pv773bkDeTC+Gr/KAE9E4DfzAZoKzRzDGenexe8edBlRZu5mp
+QWszF6+t7y5O6XkNFcqtOMEUgDeGAl9qIzcaNbPMomPD+CsIO4idPmk1K6rhiL2D
+xPCa6xNuB9nbPkp0HhbKD0G6EzBAfO7S75vaOGyT9eu0bPFGYKl4zyjWeClaP2q9
+juC5HohpIWx29mCcNTFhssJ5oo+Eg/70WKXD23nB1au7HfgMgR/gu1TL56kbTaDi
+IhQ1AxzVuuTnUWJAhRWX+H9bS6eIuAixcvBxuQOKuHYzM4juHxhux/c3dDL3k915
+gB8JGvDLCCTdplEbXajj+JK7t90nY3donT8yljp7QCFlGjpbYolVwmM=
+-----END CERTIFICATE-----
+
+
+# Vengono generati i file nginx-certificate.crt (certificato) e nginx.key (chiave privata) in formato pem.
+# Visualizza il  Subject del  certificato:
+> root@ns3:/etc/nginx/certificate# openssl x509 -in nginx-certificate.crt -subject -noout
+subject=C = IT, ST = Parma, O = UniPR, OU = Corso RETI, CN = 172.17.0.3, emailAddress = nicholas.arcari@studenti.unipr.it
+
+
+# Configurazione del Virtual Host in /etc/nginx/sites-available/default:
+> root@ns3:/etc/nginx/certificate# cd /etc/nginx/sites-available/
+> root@ns3:/etc/nginx/sites-available# nano default
+##
+# You should look at the following URL's in order to grasp a solid understanding
+# of Nginx configuration files in order to fully unleash the power of Nginx.
+# https://www.nginx.com/resources/wiki/start/
+# https://www.nginx.com/resources/wiki/start/topics/tutorials/config_pitfalls/
+# https://wiki.debian.org/Nginx/DirectoryStructure
+#
+# In most cases, administrators will remove this file from sites-enabled/ and
+# leave it as reference inside of sites-available where it will continue to be
+# updated by the nginx packaging team.
+#
+# This file will automatically load configuration files provided by other
+# applications, such as Drupal or Wordpress. These applications will be made
+# available underneath a path with that package name, such as /drupal8.
+#
+# Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
+##
+
+# Default server configuration
+#
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        # SSL configuration
+        #
+        # listen 443 ssl default_server;
+        # listen [::]:443 ssl default_server;
+        #
+        # Note: You should disable gzip for SSL traffic.
+        # See: https://bugs.debian.org/773332
+        #
+        # Read up on ssl_ciphers to ensure a secure configuration.
+        # See: https://bugs.debian.org/765782
+        #
+        # Self signed certs generated by the ssl-cert package
+        # Don't use them in a production server!
+        #
+        # include snippets/snakeoil.conf;
+
+        root /var/www/html;
+
+        # Add index.php to the list if you are using PHP
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name _;
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                try_files $uri $uri/ =404;
+        }
+
+        # pass PHP scripts to FastCGI server
+        #
+        #location ~ \.php$ {
+        #       include snippets/fastcgi-php.conf;
+        #
+        #       # With php-fpm (or other unix sockets):
+        #       fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        #       # With php-cgi (or other tcp sockets):
+        #       fastcgi_pass 127.0.0.1:9000;
+        #}
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        #location ~ /\.ht {
+        #       deny all;
+        #}
+}
+
+
+# Virtual Host configuration for example.com
+#
+# You can move that to a different file under sites-available/ and symlink that
+# to sites-enabled/ to enable it.
+#
+#server {
+#       listen 80;
+#       listen [::]:80;
+#
+#       server_name example.com;
+#
+#       root /var/www/example.com;
+#       index index.html;
+#
+#       location / {
+#               try_files $uri $uri/ =404;
+#       }
+#}
+
+server {
+        listen 4443 ssl default_server;
+        listen [::]:4443 ssl default_server;
+        ssl_certificate /etc/nginx/certificate/nginx-certificate.crt;
+        ssl_certificate_key /etc/nginx/certificate/nginx.key;
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+        server_name _;
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+
+
+# Riavviare nginx e verificare che il servizio e' attivo, ad esempio:
+> root@ns3:/etc/nginx/sites-available# service nginx reload
+ * Reloading nginx configuration nginx                                                                                                                                                                 [ OK ]
+
+
+> root@ns3:/etc/nginx/sites-available# netstat -tupan
+Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      1/nginx: master pro
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      13/sshd: /usr/sbin/
+tcp        0      0 0.0.0.0:4443            0.0.0.0:*               LISTEN      1/nginx: master pro		# a noi interessa la porta 4443
+tcp6       0      0 :::80                   :::*                    LISTEN      1/nginx: master pro
+tcp6       0      0 :::22                   :::*                    LISTEN      13/sshd: /usr/sbin/
+tcp6       0      0 :::4443                 :::*                    LISTEN      1/nginx: master pro
+
+
+
+
+	-----------------------------
+		Client https
+	-----------------------------
+
+# Accedere al server https  con wget e/o curl  da ns2 da un altro terminale:
+> docker exec -it ns2 bash
+root@ns2:/#
+
+
+> root@ns2:/# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+5: eth0@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+
+
+# Il client dovrebbe verificare il certificato del server, ma nel nostro caso il certificato self-signed non puÃ² essere verificato quindi occorre dichiarare esplicitamente che la connessione Ã¨ ammessa senza verifica.
+# Esempi:
+
+> root@ns2:/var/www/html# nmap 172.17.0.3
+Starting Nmap 7.93 ( https://nmap.org ) at 2024-12-07 18:50 UTC
+Nmap scan report for 172.17.0.3
+Host is up (0.000015s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT     STATE SERVICE
+22/tcp   open  ssh
+80/tcp   open  http
+4443/tcp open  pharos
+MAC Address: 02:42:AC:11:00:03 (Unknown)
+
+Nmap done: 1 IP address (1 host up) scanned in 1.53 seconds
+
+
+> root@ns2:/var/www/html# wget https://172.17.0.3:4443/index.html --no-check-certificate
+--2024-12-07 18:53:10--  https://172.17.0.3:4443/index.html
+Connecting to 172.17.0.3:4443... connected.
+WARNING: cannot verify 172.17.0.3's certificate, issued by 'emailAddress=nicholas.arcari@studenti.unipr.it,CN=172.17.0.3,OU=Corso RETI,O=UniPR,ST=Parma,C=IT':
+  Self-signed certificate encountered.
+HTTP request sent, awaiting response... 200 OK
+Length: 19 [text/html]
+Saving to: 'index.html.1'
+
+index.html.1                                            [ <================================================================> ]       19  --.-KB/s    in 0s
+
+2024-12-07 18:53:10 (3.88 MB/s) - 'index.html.1' saved [19/19]
+
+
+> curl --insecure https://172.17.0.3:4443/index.html
+virtual host HTTPS
+
+
+> root@ns2:/var/www/html# curl -I  --insecure https://172.17.0.3:4443/index.html
+HTTP/1.1 200 OK
+Server: nginx/1.22.0 (Ubuntu)
+Date: Sat, 07 Dec 2024 18:56:40 GMT
+Content-Type: text/html
+Content-Length: 0
+Last-Modified: Sat, 07 Dec 2024 18:53:03 GMT
+Connection: keep-alive
+ETag: "6754998f-0"
+Accept-Ranges: bytes
+
+
+# Il programma https_client_transp.py utilizza il modulo ssl che consente la programmazione ssl a livello trasporto, mentre il programma http_client_appl.py utilizza il modulo python
+# http.client, utilizzato anche per la connessione http, per la programmazione a livello applicazione:
+
+> root@ns2:/var/www/html# python3 https_client_transp.py -s 172.17.0.3 -p 4443
+ server: 172.17.0.3 port: 4443  url: /index.html
+Status: 200 and reason: OK
+virtual host HTTPS
+
+
+# Adesso apriamo il browser (nel mio caso chrome) e digitiamo il seguente url nell'apposita barra di ricerca: https://localhost:4443/index.html
+# L'antivirus Kaspersky (a pagamento) non mi fa continuare a proseguire in questa pagina in quanto la sicurezza Ã¨ troppo bassa;
+# dovrebbe perÃ² apparirmi a schermo la scritta "virtual host HTTPS"
+
+> root@ns2:/var/www/html# exit
+exit
+
+> docker-compose down
+[+] Running 2/2
+ ✔ Container ns3  Removed                                                                                                                                                                                0.7s
+ ✔ Container ns2  Removed                                                                                                                                                                                0.6s
+
+
+

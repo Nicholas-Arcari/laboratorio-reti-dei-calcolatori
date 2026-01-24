@@ -1,0 +1,144 @@
+  _                _                              _                    _               ____  
+ | |              | |                            | |                  (_)             |___ \ 
+ | |        __ _  | |__     ___    _ __    __ _  | |_    ___    _ __   _    ___         __) |
+ | |       / _` | | '_ \   / _ \  | '__|  / _` | | __|  / _ \  | '__| | |  / _ \       |__ < 
+ | |____  | (_| | | |_) | | (_) | | |    | (_| | | |_  | (_) | | |    | | | (_) |      ___) |
+ |______|  \__,_| |_.__/   \___/  |_|     \__,_|  \__|  \___/  |_|    |_|  \___/      |____/ 
+ 
+ 
+ 
+ 	----------------------------------------
+ 		+++++ Docker Bridge +++++
+ 	----------------------------------------
+ 
+ 
+# Per creare un bridge definito dall'utente.
+docker network create -d bridge bridge1 --subnet=172.21.0.0/24
+ba7dace25907c6fb136b25e0d1caa1d78739b562bcb2c40bd08725526b936cb6
+
+
+# E' possibile assegnare un indirizzo IP statico solo a bridge definiti dall'utente
+# Per eseguire un container con indirizzo IP assegnato staticamente:
+docker run -d --name ns5 --network bridge1 --ip 172.21.0.11 nginx-ssh
+docker ps
+CONTAINER ID   IMAGE       COMMAND                  CREATED          STATUS         PORTS            NAMES
+3642a1de07e1   nginx-ssh   "/docker-entrypoint..."   10 seconds ago   Up 6 seconds   22/tcp, 80/tcp   ns5
+
+#per rimuovere il bridge
+docker network rm bridge1
+Error response from daemon: error while removing network: network bridge1 id ba7dace25907c6fb136b25e0d1caa1d78739b562bcb2c40bd08725526b936cb6 has active endpoints
+
+# E' necessario prima sospendere il docker ns5, altrimenti dara' l'errore mostrato sopra
+
+
+
+	-----------------------------------------------------------
+		+++++ IP statico + port forwarding +++++
+	-----------------------------------------------------------
+	
+Vogliamo creare un containter con un IP che definiamo staticamente e il port forwarding per i 2 servizi di nginx-ssh:
+
+> docker network create -d bridge bridge1 --subnet=172.21.0.0/24
+05430718cc8c92930e58b9070964ae597092936191ffd38cfdab3325ce73bb16
+
+> docker run -d --name ns6 -p 2006:22 -p 8006:80 --network bridge1 --ip 172.21.0.6  -v /home/nick/Scrivania/Unipr/RetiDeiCalcolatori/RETI2425/html:/var/www/html cyberteam1/nginx-ssh
+db5fefd766b48de93061d405dcc9e76d3620ce29ca7ceff61a19ab90b182177c
+
+
+> docker ps
+CONTAINER ID   IMAGE                  COMMAND                  CREATED              STATUS              PORTS                                                                          NAMES
+db5fefd766b4   cyberteam1/nginx-ssh   "/docker-entrypoint..."   About a minute ago   Up About a minute   0.0.0.0:2006->22/tcp, :::2006->22/tcp, 0.0.0.0:8006->80/tcp, :::8006->80/tcp   ns6
+
+
+
+	----------------------------------------------------------------------------------------------
+		Esercizio: assegnare un IP statico e attivare il port forwarding in Docker.
+	----------------------------------------------------------------------------------------------
+	
+> mkdir dockerIPStatico
+
+> cd dockerIPStatico
+
+> wget http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/IPStatico/compose.yml
+
+--2024-10-08 18:39:55--  http://didattica-linux.unipr.it/~roberto.alfieri@unipr.it/matdid/RETI/docker/IPStatico/compose.yml
+Risoluzione di didattica-linux.unipr.it (didattica-linux.unipr.it)... 160.78.50.165
+Connessione a didattica-linux.unipr.it (didattica-linux.unipr.it)|160.78.50.165|:80... connesso.
+Richiesta HTTP inviata, in attesa di risposta... 200 OK
+Lunghezza: 450
+Salvataggio in: «compose.yml»
+
+compose.yml                     100%[=====================================================>]     450  --.-KB/s    in 0s      
+
+2024-10-08 18:39:55 (14,5 MB/s) - «compose.yml» salvato [450/450]
+
+
+#Ho riadattato il file appena scaricato compose.yml come segue (sono il numero 6 nell'elenco) :
+networks:
+  bridge1:
+    name: bridge1
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+
+services:
+  ns11:
+    container_name: ns11
+    hostname: ns11
+    image: cyberteam1/nginx-ssh
+    networks:
+      bridge1:
+       ipv4_address: 172.21.0.6
+    ports:
+      - "2006:22"
+      - "8006:80"
+    volumes:
+      - '../Scrivania/Unipr/RetiDeiCalcolatori/RETI2425/html/:/var/www/html'
+
+
+> docker-compose up -d     
+Creating network "bridge1" with driver "bridge"
+Creating ns11 ... done
+
+> docker ps
+CONTAINER ID   IMAGE                  COMMAND                  CREATED         STATUS         PORTS                                                                          NAMES
+6d31b87f15e6   cyberteam1/nginx-ssh   "/docker-entrypoint..."   3 minutes ago   Up 3 minutes   0.0.0.0:2006->22/tcp, :::2006->22/tcp, 0.0.0.0:8006->80/tcp, :::8006->80/tcp   ns11
+
+> docker exec ns11  ls /var/www/html/
+test.html
+
+> ssh ubuntu@localhost -p 2006 
+The authenticity of host '[localhost]:2006 ([::1]:2006)' can't be established.
+ED25519 key fingerprint is SHA256:LB3Ms/DT4dEpcYsnq3DdXfojqT08VDApPMh1fdmSV90.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '[localhost]:2006' (ED25519) to the list of known hosts.
+ubuntu@localhost's password:
+Welcome to Ubuntu 23.04 (GNU/Linux 6.10.9-amd64 x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+ubuntu@ns11:~$ exit
+logout
+Connection to localhost closed.
+
+> curl http://localhost:8006/test.html
+<H1> Hello World! </H1>
+
+> docker rm -f ns11
+ns11
