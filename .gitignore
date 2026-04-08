@@ -1,2 +1,38 @@
+# Catture di rete
 *.pcap
+*.pcapng
+
+# Log
 *.log
+
+# File temporanei
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Archivi compressi (scaricati durante i lab)
+*.tgz
+*.tar.gz
+*.zip
+
+# File crittografati generati durante i lab
+*.aes256
+*.rsa_sign
+*.rsa_crypt
+*.b64
+*.md5
+*.md5sum
+*.hmac
+*.pem
+
+# File compilati
+*.o
+*.out
+
+# Editor
+.vscode/
+.idea/
+*.kate-swp
